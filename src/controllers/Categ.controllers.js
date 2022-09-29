@@ -5,7 +5,7 @@ async function getCategorie(req, res) {
     const { id } = req.params;
     try {
         const categorie = await connection.query('SELECT * FROM categories WHERE id=$1', [id]);
-        if (!categorie) {
+        if (categorie.rows.length<1) {
             return res.status(StatusCodes.NOT_FOUND).send('Error: category not found');
         }
         return res.status(StatusCodes.ACCEPTED).send(categorie.rows[0]);
@@ -19,8 +19,8 @@ async function getCategorie(req, res) {
 async function getCategories(req, res) {
     try {
         const categorie = await connection.query('SELECT * FROM categories');
-        if (!categorie) {
-            return res.status(StatusCodes.NOT_FOUND).send('Error: categories are empty');
+        if (categorie.rows.length<1) {
+            return res.status(StatusCodes.NOT_FOUND).send('Categories are empty');
         }
         return res.status(StatusCodes.ACCEPTED).send(categorie.rows);
     }
