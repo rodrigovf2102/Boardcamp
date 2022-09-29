@@ -1,7 +1,7 @@
 import connection from "../database.js";
 import {StatusCodes} from 'http-status-codes';
 
-async function getCategories(req,res){
+async function getCategorie(req,res){
     const {id} = req.params;
     try{
         const categorie = await connection.query('SELECT * FROM categories WHERE id=$1',[id]);
@@ -16,4 +16,18 @@ async function getCategories(req,res){
     }
 }
 
-export {getCategories}
+async function getCategories(req,res){
+    try{
+        const categorie = await connection.query('SELECT * FROM categories');
+        if(!categorie){
+            res.status(StatusCodes.NOT_FOUND).send('Error: categories are empty');
+        }
+        res.status(StatusCodes.ACCEPTED).send(categorie.rows);
+    }
+    catch(error){
+        console.log(error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+}
+
+export {getCategories, getCategorie}
