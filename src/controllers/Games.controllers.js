@@ -2,8 +2,15 @@ import { StatusCodes } from "http-status-codes";
 import connection from "../database.js";
 
 async function getGames(req, res) {
+    const {name} = req.query;
     try {
-        const games = await connection.query('SELECT * FROM games');
+        let games;
+        if(name){
+            games = await connection.query('SELECT * FROM games WHERE name LIKE $1',[`${name}%`]);
+        }
+        if(!name){
+            games = await connection.query('SELECT * FROM games');
+        }
         if (games.rows.length < 1) {
             return res.status(StatusCodes.NOT_FOUND).send('Games table is empty');
         }
