@@ -1,3 +1,14 @@
+import pg from 'pg';
+
+const {Pool} = pg;
+
 const connection = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    user: process.env.USER,
+    password: process.env.PASSWORD,
+    host: process.env.HOST,
+    port: process.env.PORT,
+    database: process.env.DATABASE
   });
+
+
+export default connection;

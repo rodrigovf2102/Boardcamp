@@ -9,6 +9,6 @@ const server = express();
 server.use(cors());
 server.use(express.json());
 
-const port = process.env.PORT;
+const port = process.env.API_PORT;
 
 server.listen(port);
