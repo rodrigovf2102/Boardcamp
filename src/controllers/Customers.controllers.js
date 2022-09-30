@@ -20,7 +20,7 @@ async function getCustomers(req, res) {
 async function getCustomer(req, res) {
     const { id } = req.params;
     try {
-        const customers = (await connection.query('SELECT * FROM customers WHERE id=$1;', [id])).rows
+        const customers = (await connection.query('SELECT * FROM customers WHERE id=$1;', [id])).rows;
         if (customers.length < 1) {
             return res.status(StatusCodes.NOT_FOUND).send('Error: customer not found');
         }
@@ -35,7 +35,7 @@ async function postCustomer(req, res) {
     const { name, phone, cpf, birthday } = req.body;
     try {
         const equalCpf = (await connection.query('SELECT * FROM customers WHERE cpf=$1;', [cpf])).rows;
-        if (equalCpf.length>0) {
+        if (equalCpf.length > 0) {
             return res.status(StatusCodes.CONFLICT).send('Error: cpf already exist');
         }
         await connection.query(
@@ -48,4 +48,21 @@ async function postCustomer(req, res) {
     }
 }
 
-export { getCustomers, getCustomer, postCustomer }
+async function updateCustomer(req, res) {
+    const { name, phone, cpf, birthday } = req.body;
+    const { id } = req.params;
+    try {
+        const equalCpf = (await connection.query('SELECT * FROM customers WHERE cpf=$1;', [cpf])).rows;
+        if (equalCpf.length > 0) {
+            return res.status(StatusCodes.CONFLICT).send('Error: cpf already exist');
+        }
+        await connection.query('UPDATE customers SET name=$1,phone=$2,cpf=$3,birthday=$4 WHERE id=$5;'
+            , [name, phone, cpf, birthday, id]);
+        return res.sendStatus(StatusCodes.OK);
+    } catch (error) {
+        console.log(error.message);
+        return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+}
+
+export { getCustomers, getCustomer, postCustomer, updateCustomer }
