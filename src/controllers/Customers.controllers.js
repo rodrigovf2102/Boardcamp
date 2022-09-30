@@ -8,11 +8,9 @@ async function getCustomers(req, res) {
             const customers = (await connection.query('SELECT * FROM customers;')).rows;
             return res.status(StatusCodes.ACCEPTED).send(customers);
         }
-        if (cpf) {
-            const customers = (await connection
-                .query('SELECT * FROM customers WHERE cpf LIKE $1;', [`${cpf}%`])).rows;
-            return res.status(StatusCodes.ACCEPTED).send(customers);
-        }
+        const customers = (await connection
+            .query('SELECT * FROM customers WHERE cpf LIKE $1;', [`${cpf}%`])).rows;
+        return res.status(StatusCodes.ACCEPTED).send(customers);
     } catch (error) {
         console.log(error.message);
         return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
@@ -36,9 +34,13 @@ async function getCustomer(req, res) {
 async function postCustomer(req, res) {
     const { name, phone, cpf, birthday } = req.body;
     try {
+        const equalCpf = (await connection.query('SELECT * FROM customers WHERE cpf=$1;', [cpf])).rows;
+        if (equalCpf.length>0) {
+            return res.status(StatusCodes.CONFLICT).send('Error: cpf already exist');
+        }
         await connection.query(
             'INSERT INTO customers (name,phone,cpf,birthday) VALUES ($1,$2,$3,$4);'
-            , [name,phone,cpf,birthday]);
+            , [name, phone, cpf, birthday]);
         return res.sendStatus(StatusCodes.CREATED);
     } catch (error) {
         console.log(error.message);
