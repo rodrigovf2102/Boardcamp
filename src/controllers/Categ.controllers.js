@@ -38,7 +38,7 @@ async function postCategorie(req, res) {
             return res.status(StatusCodes.CONFLICT).send('Error: category already exists');
         }
         await connection.query('INSERT INTO categories (name) VALUES ($1)', [name]);
-        return res.sendStatus(StatusCodes.ACCEPTED);
+        return res.sendStatus(StatusCodes.CREATED);
     }
     catch (error) {
         console.log(error);
