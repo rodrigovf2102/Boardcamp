@@ -76,7 +76,6 @@ async function postRental(req, res) {
         if (!gameIdVerification) {
             return res.status(StatusCodes.BAD_REQUEST).send('Error: game Id doesn`t exist');
         }
-        console.log(gameIdVerification);
         if (gameIdVerification.stockTotal <= 0) {
             return res.status(StatusCodes.BAD_REQUEST).send('Error: game not available on stock');
         }
