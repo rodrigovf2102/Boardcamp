@@ -1,6 +1,8 @@
 import connection from "../database.js";
 import { StatusCodes } from "http-status-codes";
 import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime.js';
+dayjs.extend(relativeTime);
 
 async function getRentals(req, res) {
     const { customerId, gameId } = req.query;
@@ -96,9 +98,51 @@ async function postRental(req, res) {
         console.log(error.message);
         return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
     }
-
 }
 
+async function postRentalReturn(req, res) {
+    const { id } = req.params;
+    const ticksPerDay = 864000000000;
+    try {
+        const rental = (await connection.query('SELECT * FROM rentals WHERE id=$1;', [id])).rows[0];
+        if (!rental) {
+            return res.status(StatusCodes.NOT_FOUND).send('Error: rental not found');
+        }
+        if (rental.returnDate !== null) {
+            return res.status(StatusCodes.BAD_REQUEST).send('Error: game already returned');
+        }
+        rental.returnDate = new Date(dayjs().format('MM/DD/YYYY'));
+        let delayedDays = Math.ceil((rental.returnDate.getTime() - rental.daysRented * ticksPerDay - rental.rentDate.getTime()) / ticksPerDay);
+        if (delayedDays < 0) {
+            delayedDays = 0;
+        }
+        rental.delayFee = delayedDays * (rental.originalPrice / rental.daysRented);
+        const game = (await connection.query('SELECT * FROM games WHERE id=$1;', [rental.gameId])).rows[0];
+        const gameStock = game.stockTotal + 1;
+        await connection.query('UPDATE games SET "stockTotal"=$1 WHERE id=$2;', [gameStock, game.id]);
+        await connection.query('UPDATE rentals SET "returnDate"=$1,"delayFee"=$2 WHERE id=$3;',
+            [rental.returnDate, rental.delayFee, id])
+        return res.sendStatus(StatusCodes.OK);
+    } catch (error) {
+        console.log(error.message);
+        return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+}
 
+async function deleteRental(req, res) {
+    const { id } = req.params;
+    try {
+        const verificationId = (await connection.query('SELECT * FROM rentals WHERE id=$1',[id])).rows[0];
+        console.log(verificationId)
+        if(!verificationId){
+            return res.status(StatusCodes.NOT_FOUND).send('Error: rental id not found');
+        }
+        await connection.query('DELETE FROM rentals WHERE id=$1',[id]);
+        return res.sendStatus(StatusCodes.OK);
+    } catch (error) {
+        console.log(error.message);
+        return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+}
 
-export { getRentals, postRental }
+export { getRentals, postRental, postRentalReturn, deleteRental }
