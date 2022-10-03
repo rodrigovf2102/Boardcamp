@@ -3,8 +3,6 @@ import { StatusCodes } from 'http-status-codes';
 
 async function getCategorie(req, res) {
     const { id } = req.params;
-
-
     try {
         const categorie = await connection.query('SELECT * FROM categories WHERE id=$1', [id]);
         if (categorie.rows.length < 1) {
