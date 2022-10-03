@@ -5,7 +5,9 @@ import relativeTime from 'dayjs/plugin/relativeTime.js';
 dayjs.extend(relativeTime);
 
 async function getRentals(req, res) {
-    const { customerId, gameId } = req.query;
+    let { customerId, gameId, offset, limit } = req.query;
+    if (!offset) { offset = 0; }
+    if (!limit) { limit = 100; }
     try {
         let rentals;
         const standardQuerySearch = `SELECT rentals.*,customers.id AS "customerId",customers.name,
@@ -15,19 +17,23 @@ async function getRentals(req, res) {
             JOIN games ON rentals."gameId"=games.id
             JOIN categories ON games."categoryId"=categories.id`;
         if (!customerId && !gameId) {
-            rentals = (await connection.query(`${standardQuerySearch};`)).rows;
+            rentals = (await connection.query(
+                `${standardQuerySearch} OFFSET $1 LIMIT $2;`,[offset,limit])).rows;
         }
         if (!customerId && gameId) {
             rentals = (await connection.query(
-                `${standardQuerySearch} WHERE games.id=$1;`, [gameId])).rows;
+                `${standardQuerySearch} WHERE games.id=$1 OFFSET $1 LIMIT $2;`,
+                [gameId,offset,limit])).rows;
         }
         if (customerId && !gameId) {
             rentals = (await connection.query(
-                `${standardQuerySearch} WHERE customers.id=$1;`, [customerId])).rows;
+                `${standardQuerySearch} WHERE customers.id=$1 OFFSET $1 LIMIT $2;`,
+                [customerId,offset,limit])).rows;
         }
         if (customerId && gameId) {
             rentals = (await connection.query(
-                `${standardQuerySearch} WHERE customers.id=$1 AND games.id=$2;`, [customerId, gameId])).rows;
+                `${standardQuerySearch} WHERE customers.id=$1 AND games.id=$2 OFFSET $1 LIMIT $2;`,
+                [customerId, gameId,offset,limit])).rows;
         }
         for (let i = 0; i < rentals.length; i++) {
             rentals[i].customer = {
