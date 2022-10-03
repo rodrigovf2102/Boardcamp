@@ -12,26 +12,28 @@ async function getCategorie(req, res) {
     }
     catch (error) {
         console.log(error);
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+        return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 
 async function getCategories(req, res) {
-    let { offset, limit } = req.query;
+    let { offset, limit, order } = req.query;
     if (!offset) { offset = 0; }
     if (!limit) { limit = 100; }
+    if (!order) { order = 'id'}
     try {
         let categorie;
         const standardSearch = 'SELECT * FROM categories';
-        categorie = await connection.query(`${standardSearch} OFFSET $1 LIMIT $2`, [offset, limit]);
+        categorie = await connection.query(
+            `${standardSearch} ORDER BY ${order} OFFSET $1 LIMIT $2`, [offset, limit]);
         if (categorie.rows.length < 1) {
             return res.status(StatusCodes.NOT_FOUND).send('Categories are empty');
         }
         return res.status(StatusCodes.ACCEPTED).send(categorie.rows);
     }
     catch (error) {
-        console.log(error);
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+        console.log(error.message);
+        return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 
@@ -47,7 +49,7 @@ async function postCategorie(req, res) {
     }
     catch (error) {
         console.log(error);
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+        return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 
