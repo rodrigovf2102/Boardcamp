@@ -46,6 +46,7 @@ async function getCustomers(req, res) {
                 )).rows;
             return res.status(StatusCodes.ACCEPTED).send(customers);
         }
+        
     } catch (error) {
         console.log(error.message);
         return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);

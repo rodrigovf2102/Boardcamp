@@ -17,22 +17,13 @@ async function getCategorie(req, res) {
 }
 
 async function getCategories(req, res) {
-    const { offset, limit } = req.query;
+    let { offset, limit } = req.query;
+    if (!offset) { offset = 0; }
+    if (!limit) { limit = 100; }
     try {
         let categorie;
         const standardSearch = 'SELECT * FROM categories';
-        if (!offset && !limit) {
-            categorie = await connection.query(standardSearch);
-        }
-        if (!offset && limit) {
-            categorie = await connection.query(`${standardSearch} LIMIT $1`, [limit]);
-        }
-        if (offset && !limit) {
-            categorie = await connection.query(`${standardSearch} OFFSET $1`, [offset]);
-        }
-        if (offset && limit) {
-            categorie = await connection.query(`${standardSearch} OFFSET $1 LIMIT $2`, [offset,limit]);
-        }
+        categorie = await connection.query(`${standardSearch} OFFSET $1 LIMIT $2`, [offset, limit]);
         if (categorie.rows.length < 1) {
             return res.status(StatusCodes.NOT_FOUND).send('Categories are empty');
         }
