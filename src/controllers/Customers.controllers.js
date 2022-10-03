@@ -2,51 +2,25 @@ import connection from "../database.js";
 import { StatusCodes } from 'http-status-codes';
 
 async function getCustomers(req, res) {
-    const { cpf, limit, offset } = req.query;
+    let { cpf, limit, offset } = req.query;
+    if (!offset) { offset = 0; }
+    if (!limit) { limit = 100; }
     try {
         let customers;
         const standardSearch = 'SELECT * FROM customers';
-        if (!limit && !offset) {
-            if (!cpf) {
-                customers = (await connection.query(standardSearch)).rows;
-                return res.status(StatusCodes.ACCEPTED).send(customers);
-            }
-            customers = (await connection
-                .query(`${standardSearch} WHERE cpf LIKE $1;`, [`${cpf}%`])).rows;
-            return res.status(StatusCodes.ACCEPTED).send(customers);
+        if (!cpf) {
+            customers = (
+                await connection.query(`${standardSearch} OFFSET $1 LIMIT $2`, [offset, limit])
+            ).rows;
         }
-        if (limit && !offset) {
-            if (!cpf) {
-                customers = (await connection.query(`${standardSearch} LIMIT $1`, [limit])).rows;
-                return res.status(StatusCodes.ACCEPTED).send(customers);
-            }
-            customers = (await connection
-                .query(`${standardSearch} WHERE cpf LIKE $1 LIMIT $2;`, [`${cpf}%`, limit])).rows;
-            return res.status(StatusCodes.ACCEPTED).send(customers);
-        }
-        if (!limit && offset) {
-            if (!cpf) {
-                customers = (await connection.query(`${standardSearch} OFFSET $1`, [offset])).rows;
-                return res.status(StatusCodes.ACCEPTED).send(customers);
-            }
-            customers = (await connection
-                .query(`${standardSearch} WHERE cpf LIKE $1 OFFSET $2;`, [`${cpf}%`, offset])).rows;
-            return res.status(StatusCodes.ACCEPTED).send(customers);
-        }
-        if (limit && offset) {
-            if (!cpf) {
-                customers = (
-                    await connection.query(`${standardSearch} OFFSET $1 LIMIT $2`, [offset, limit])
-                ).rows;
-                return res.status(StatusCodes.ACCEPTED).send(customers);
-            }
+        if (cpf) {
             customers = (await connection
                 .query(
                     `${standardSearch} WHERE cpf LIKE $1 OFFSET $2 LIMIT $3;`, [`${cpf}%`, offset, limit]
                 )).rows;
-            return res.status(StatusCodes.ACCEPTED).send(customers);
         }
-        
+        return res.status(StatusCodes.ACCEPTED).send(customers);
+
     } catch (error) {
         console.log(error.message);
         return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
