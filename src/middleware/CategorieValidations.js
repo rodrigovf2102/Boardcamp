@@ -7,8 +7,8 @@ const categoriesSchema = joi.object({
 })
 
 async function categorieValidations(req,res,next){
-    let name = req.body.name; 
-    let validCategorie = {name:name};
+    const name = req.body.name; 
+    const validCategorie = {name:name};
     const validation = categoriesSchema.validate(validCategorie,{abortEarly:false});
     if(validation.error){
         const error = validation.error.details[0].message;

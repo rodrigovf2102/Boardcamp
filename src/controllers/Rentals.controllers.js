@@ -8,7 +8,7 @@ async function getRentals(req, res) {
     const { customerId, gameId } = req.query;
     try {
         let rentals;
-        let standardQuerySearch = `SELECT rentals.*,customers.id AS "customerId",customers.name,
+        const standardQuerySearch = `SELECT rentals.*,customers.id AS "customerId",customers.name,
         games.name AS "gameName", games."categoryId",
         categories.name AS "categoryName" FROM rentals 
             JOIN customers ON rentals."customerId"=customers.id
@@ -112,7 +112,9 @@ async function postRentalReturn(req, res) {
             return res.status(StatusCodes.BAD_REQUEST).send('Error: game already returned');
         }
         rental.returnDate = new Date(dayjs().format('MM/DD/YYYY'));
-        let delayedDays = Math.ceil((rental.returnDate.getTime() - rental.daysRented * ticksPerDay - rental.rentDate.getTime()) / ticksPerDay);
+        let delayedDays = Math.ceil(
+            (rental.returnDate.getTime() - rental.daysRented * ticksPerDay - rental.rentDate.getTime())
+            / ticksPerDay);
         if (delayedDays < 0) {
             delayedDays = 0;
         }
@@ -132,12 +134,12 @@ async function postRentalReturn(req, res) {
 async function deleteRental(req, res) {
     const { id } = req.params;
     try {
-        const verificationId = (await connection.query('SELECT * FROM rentals WHERE id=$1',[id])).rows[0];
+        const verificationId = (await connection.query('SELECT * FROM rentals WHERE id=$1', [id])).rows[0];
         console.log(verificationId)
-        if(!verificationId){
+        if (!verificationId) {
             return res.status(StatusCodes.NOT_FOUND).send('Error: rental id not found');
         }
-        await connection.query('DELETE FROM rentals WHERE id=$1',[id]);
+        await connection.query('DELETE FROM rentals WHERE id=$1', [id]);
         return res.sendStatus(StatusCodes.OK);
     } catch (error) {
         console.log(error.message);

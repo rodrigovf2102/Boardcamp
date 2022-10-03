@@ -3,9 +3,11 @@ import { StatusCodes } from 'http-status-codes';
 
 async function getCategorie(req, res) {
     const { id } = req.params;
+
+
     try {
         const categorie = await connection.query('SELECT * FROM categories WHERE id=$1', [id]);
-        if (categorie.rows.length<1) {
+        if (categorie.rows.length < 1) {
             return res.status(StatusCodes.NOT_FOUND).send('Error: category not found');
         }
         return res.status(StatusCodes.ACCEPTED).send(categorie.rows[0]);
@@ -17,9 +19,23 @@ async function getCategorie(req, res) {
 }
 
 async function getCategories(req, res) {
+    const { offset, limit } = req.query;
     try {
-        const categorie = await connection.query('SELECT * FROM categories');
-        if (categorie.rows.length<1) {
+        let categorie;
+        const standardSearch = 'SELECT * FROM categories';
+        if (!offset && !limit) {
+            categorie = await connection.query(standardSearch);
+        }
+        if (!offset && limit) {
+            categorie = await connection.query(`${standardSearch} LIMIT $1`, [limit]);
+        }
+        if (offset && !limit) {
+            categorie = await connection.query(`${standardSearch} OFFSET $1`, [offset]);
+        }
+        if (offset && limit) {
+            categorie = await connection.query(`${standardSearch} OFFSET $1 LIMIT $2`, [offset,limit]);
+        }
+        if (categorie.rows.length < 1) {
             return res.status(StatusCodes.NOT_FOUND).send('Categories are empty');
         }
         return res.status(StatusCodes.ACCEPTED).send(categorie.rows);
