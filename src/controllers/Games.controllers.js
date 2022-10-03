@@ -2,7 +2,9 @@ import { StatusCodes } from "http-status-codes";
 import connection from "../database.js";
 
 async function getGames(req, res) {
-    const { name, offset, limit } = req.query;
+    let { name, offset, limit } = req.query;
+    if (!offset) { offset = 0; }
+    if (!limit) { limit = 100; }
     let nameCaseInsensitive = '';
     if (name) {
         for (let i = 0; i < name.length; i++) {
@@ -14,45 +16,14 @@ async function getGames(req, res) {
         let games;
         const standardSearch = `SELECT games.*,categories.name AS "categoryName" 
         FROM games JOIN categories ON games."categoryId"=categories.id`;
-        if(!offset && !limit){
-            if (name) {
-                games = await connection.query(
-                    `${standardSearch} WHERE games.name LIKE $1;`, [`${nameCaseInsensitive}%`]);
-            }
-            if (!name) {
-                games = await connection.query(`${standardSearch};`);
-            }
+        if (name) {
+            games = await connection.query(
+                `${standardSearch} WHERE games.name LIKE $1 OFFSET $2 LIMIT $3;`,
+                [`${nameCaseInsensitive}%`, offset, limit]);
         }
-        if(offset && !limit){
-            if (name) {
-                games = await connection.query(
-                    `${standardSearch} WHERE games.name LIKE $1 OFFSET $2;`,
-                    [`${nameCaseInsensitive}%`,offset]);
-            }
-            if (!name) {
-                games = await connection.query(`${standardSearch} OFFSET $1;`,[offset]);
-            }
-        }
-        if(!offset && limit){
-            if (name) {
-                games = await connection.query(
-                    `${standardSearch} WHERE games.name LIKE $1 LIMIT $2;`,
-                    [`${nameCaseInsensitive}%`,limit]);
-            }
-            if (!name) {
-                games = await connection.query(`${standardSearch} LIMIT $1;`,[limit]);
-            }
-        }
-        if(offset && limit){
-            if (name) {
-                games = await connection.query(
-                    `${standardSearch} WHERE games.name LIKE $1 OFFSET $2 LIMIT $3;`,
-                    [`${nameCaseInsensitive}%`,offset,limit]);
-            }
-            if (!name) {
-                games = await connection.query(`${standardSearch} OFFSET $1 LIMIT $2;`,
-                [offset,limit]);
-            }
+        if (!name) {
+            games = await connection.query(`${standardSearch} OFFSET $1 LIMIT $2;`,
+                [offset, limit]);
         }
         if (games.rows.length < 1) {
             return res.status(StatusCodes.NOT_FOUND).send('Games not found');
