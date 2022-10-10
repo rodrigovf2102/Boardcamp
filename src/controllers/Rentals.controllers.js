@@ -27,12 +27,12 @@ async function getRentals(req, res) {
         }
         if (customerId && !gameId) {
             rentals = (await connection.query(
-                `${standardQuerySearch} WHERE customers.id=$1 OFFSET $1 LIMIT $2;`,
+                `${standardQuerySearch} WHERE customers.id=$1 OFFSET $2 LIMIT $3;`,
                 [customerId,offset,limit])).rows;
         }
         if (customerId && gameId) {
             rentals = (await connection.query(
-                `${standardQuerySearch} WHERE customers.id=$1 AND games.id=$2 OFFSET $1 LIMIT $2;`,
+                `${standardQuerySearch} WHERE customers.id=$1 AND games.id=$2 OFFSET $3 LIMIT $4;`,
                 [customerId, gameId,offset,limit])).rows;
         }
         for (let i = 0; i < rentals.length; i++) {
